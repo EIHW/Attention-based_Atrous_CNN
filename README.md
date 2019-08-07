@@ -3,7 +3,9 @@ Pytorch code for the paper 'Attention-based Atrous Convolutional Neural Networks
 
 # Data
 DCASE 2018 Task 1 - Acoustic Scene Classification, containing:
+
 subtask A: data from device A
+
 subtask B: data from device A, B, and C
 
 # Preparation
@@ -45,6 +47,8 @@ If the user referred the code, please cite our paper,
   Pages                    = {56--60}
   
 }
+
+
 
 
 
