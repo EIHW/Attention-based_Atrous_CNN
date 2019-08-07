@@ -1,16 +1,14 @@
 # Attention-based_Atrous_CNN
 Pytorch code for the paper 'Attention-based Atrous Convolutional Neural Networks: Visualisation and Understanding Perspectives of Acoustic Scenes', by Zhao Ren, Qiuqiang Kong, Jing Han, Mark Plumbley, Björn Schuller.
 
-# Data: 
-
+# Data
 DCASE 2018 Task 1 - Acoustic Scene Classification, containing:
 
 subtask A: data from device A
 
 subtask B: data from device A, B, and C
 
-# preparation
-
+# Preparation
 channels:
   - pytorch
 dependencies:
@@ -24,28 +22,22 @@ dependencies:
     - scikit-learn==0.19.1
     - soundfile==0.10.2
 
-# run 
+# Run 
 sh runme.sh
 
 In runme.sh, please run the following files for different tasks:
 1. feature extracttion: utils/features.py
 2. training a model, and evaluation: main_pytorch.py
 
-
+# Cite
 If the user referred the code, please cite our paper,
 
 @InProceedings{ren2019attention,
-
   Title                    = {{Attention-based atrous convolutional neural networks: Visualisation and understanding perspectives of acoustic scenes}},
-  
   Author                   = {Ren, Zhao and Kong, Qiuqiang and Han, Jing and Plumbley, Mark and Schuller, Bj\"orn},
-  
   Booktitle                = {Proc.\ ICASSP},
-  
   Year                     = {2019},
-  
   Address                  = {Brighton, UK},
-  
   Pages                    = {56--60}
   
 }
@@ -53,9 +45,6 @@ If the user referred the code, please cite our paper,
 
 
 Zhao Ren
-
 ZD.B chair of Embedded Intelligence for Health Care and Wellbeing
-
 University of Augsburg
-
 07.08.2019
