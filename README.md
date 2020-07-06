@@ -26,7 +26,7 @@ dependencies:
 sh runme.sh
 
 In runme.sh, please run the following files for different tasks:
-1. feature extracttion: utils/features.py
+1. feature extraction: utils/features.py
 2. training a model, and evaluation: main_pytorch.py
 
 # Cite
