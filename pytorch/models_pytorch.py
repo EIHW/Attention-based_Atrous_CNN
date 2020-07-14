@@ -244,4 +244,170 @@ class Attention2d(nn.Module):
             return x
 
 
+class EmbeddingLayers(nn.Module):
+    def __init__(self):
+        super(EmbeddingLayers, self).__init__()
 
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=64,
+                               kernel_size=(5, 5), stride=(1, 1),
+                               padding=(2, 2), bias=False)
+
+        self.conv2 = nn.Conv2d(in_channels=64, out_channels=128,
+                               kernel_size=(5, 5), stride=(1, 1),
+                               padding=(2, 2), bias=False)
+
+        self.conv3 = nn.Conv2d(in_channels=128, out_channels=256,
+                               kernel_size=(5, 5), stride=(1, 1),
+                               padding=(2, 2), bias=False)
+
+        self.conv4 = nn.Conv2d(in_channels=256, out_channels=512,
+                               kernel_size=(5, 5), stride=(1, 1),
+                               padding=(2, 2), bias=False)
+
+        self.bn1 = nn.BatchNorm2d(64)
+        self.bn2 = nn.BatchNorm2d(128)
+        self.bn3 = nn.BatchNorm2d(256)
+        self.bn4 = nn.BatchNorm2d(512)
+
+        self.init_weights()
+
+    def init_weights(self):
+        init_layer(self.conv1)
+        init_layer(self.conv2)
+        init_layer(self.conv3)
+        init_layer(self.conv4)
+
+        init_bn(self.bn1)
+        init_bn(self.bn2)
+        init_bn(self.bn3)
+        init_bn(self.bn4)
+
+    def forward(self, input, return_layers=False):
+        (_, seq_len, mel_bins) = input.shape
+
+        x = input.view(-1, 1, seq_len, mel_bins)
+        """(samples_num, feature_maps, time_steps, freq_num)"""
+
+        a1 = F.relu(self.bn1(self.conv1(x)))
+        a1 = F.max_pool2d(a1, kernel_size=(2, 2))
+        a2 = F.relu(self.bn2(self.conv2(a1)))
+        a2 = F.max_pool2d(a2, kernel_size=(2, 2))
+        a3 = F.relu(self.bn3(self.conv3(a2)))
+        a3 = F.max_pool2d(a3, kernel_size=(2, 2))
+        emb = F.relu(self.bn4(self.conv4(a3)))
+        emb = F.max_pool2d(emb, kernel_size=(2, 2))
+
+        if return_layers is False:
+            return emb
+        else:
+            return [a1, a2, a3, emb]
+
+class DecisionLevelMaxPooling(nn.Module):
+    def __init__(self, classes_num):
+
+        super(DecisionLevelMaxPooling, self).__init__()
+
+        self.emb = EmbeddingLayers()
+        self.fc_final = nn.Linear(512, classes_num)
+
+        self.init_weights()
+
+    def init_weights(self):
+
+        init_layer(self.fc_final)
+
+    def forward(self, input):
+        """input: (samples_num, channel, time_steps, freq_bins)
+        """
+
+        # (samples_num, channel, time_steps, freq_bins)
+        x = self.emb(input)
+
+        # (samples_num, 512, hidden_units)
+        output = F.max_pool2d(x, kernel_size=x.shape[2:])
+        output = output.view(output.shape[0:2])
+
+        output = F.log_softmax(self.fc_final(output), dim=-1)
+
+        return output
+
+class DecisionLevelAvgPooling(nn.Module):
+    def __init__(self, classes_num):
+        super(DecisionLevelAvgPooling, self).__init__()
+
+        self.emb = EmbeddingLayers()
+        self.fc_final = nn.Linear(512, classes_num)
+
+        self.init_weights()
+
+    def init_weights(self):
+        init_layer(self.fc_final)
+
+    def forward(self, input):
+        """input: (samples_num, channel, time_steps, freq_bins)
+        """
+
+        # (samples_num, channel, time_steps, freq_bins)
+        x = self.emb(input)
+
+        # (samples_num, 512, hidden_units)
+        x = F.avg_pool2d(x, kernel_size=x.shape[2:])
+        x = x.view(x.shape[0:2])
+
+        output = F.log_softmax(self.fc_final(x), dim=-1)
+
+        return output
+
+class DecisionLevelFlatten(nn.Module):
+    def __init__(self, classes_num):
+        super(DecisionLevelFlatten, self).__init__()
+
+        self.emb = EmbeddingLayers()
+        self.fc_final = nn.Linear(40960, classes_num)
+
+        self.init_weights()
+
+    def init_weights(self):
+        init_layer(self.fc_final)
+
+    def forward(self, input):
+        """input: (samples_num, channel, time_steps, freq_bins)
+        """
+
+        # (samples_num, channel, time_steps, freq_bins)
+        x = self.emb(input)
+
+        # (samples_num, 512, hidden_units)
+        x = x.view(x.size(0), x.size(1) * x.size(2) * x.size(3))
+
+        output = F.log_softmax(self.fc_final(x), dim=-1)
+
+        return output
+
+class DecisionLevelSingleAttention(nn.Module):
+
+    def __init__(self, classes_num):
+
+        super(DecisionLevelSingleAttention, self).__init__()
+
+        self.emb = EmbeddingLayers()
+        self.attention = Attention2d(
+            512,
+            classes_num,
+            att_activation='sigmoid',
+            cla_activation='log_softmax')
+
+    def init_weights(self):
+        pass
+
+    def forward(self, input):
+        """input: (samples_num, freq_bins, time_steps, 1)
+        """
+
+        # (samples_num, hidden_units, time_steps, 1)
+        b1 = self.emb(input)
+
+        # (samples_num, classes_num, time_steps, 1)
+        output = self.attention(b1)
+
+        return output
