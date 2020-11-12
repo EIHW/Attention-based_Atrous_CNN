@@ -54,7 +54,7 @@ If the user referred the code, please cite our paper,
 
 Zhao Ren
 
-chair of Embedded Intelligence for Health Care and Wellbeing
+Chair of Embedded Intelligence for Health Care and Wellbeing
 
 University of Augsburg
 
